@@ -1,0 +1,7 @@
+dist/
+src/generated/
+node_modules/
+*.lock
+prisma/dev.db
+coverage/
+*.md

@@ -1,0 +1,18 @@
+# Lefthook configuration
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: false
+  jobs:
+    - name: format
+      glob: "*.{js,ts,mts,cts,json,yml,yaml}"
+      run: npx prettier --write {staged_files}
+      stage_fixed: true
+
+    - name: lint
+      glob: "*.{js,ts,mts,cts}"
+      run: npx eslint --fix {staged_files}
+      stage_fixed: true
+
+    - name: typecheck
+      run: npm run typecheck
