@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+
+# Keep environment variables out of version control
+*.env*
+!*.env*.example
+
+# Generated files
+/src/generated/
+
+# Build output
+dist/
+
+# Database
+prisma/*.db
+prisma/*.db-journal
+
