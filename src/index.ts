@@ -47,20 +47,27 @@ async function startServer(): Promise<void> {
   });
 }
 
-// Graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\nShutting down gracefully...");
-  await disconnectDatabase();
-  process.exit(0);
-});
+// Only start server if this is the main module (not imported for testing)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
+  // Graceful shutdown
+  process.on("SIGINT", async () => {
+    console.log("\nShutting down gracefully...");
+    await disconnectDatabase();
+    process.exit(0);
+  });
 
-process.on("SIGTERM", async () => {
-  console.log("\nShutting down gracefully...");
-  await disconnectDatabase();
-  process.exit(0);
-});
+  process.on("SIGTERM", async () => {
+    console.log("\nShutting down gracefully...");
+    await disconnectDatabase();
+    process.exit(0);
+  });
 
-startServer().catch((error) => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
-});
+  startServer().catch((error) => {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  });
+}
+
+// Export app for testing
+export default app;

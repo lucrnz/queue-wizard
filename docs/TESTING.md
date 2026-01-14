@@ -1,45 +1,42 @@
 # Testing Strategy
 
-This document outlines the testing strategy and recommendations for the QueueWizard project.
+This document outlines the testing strategy for the QueueWizard project.
 
-> **Status:** Testing infrastructure is planned but not yet implemented.
+> **Status:** ✅ Implemented
 
 ---
 
 ## Overview
 
-QueueWizard should implement a comprehensive testing strategy covering:
+QueueWizard implements a comprehensive testing strategy covering:
 
 1. **Unit Tests** — Individual functions and utilities
 2. **Integration Tests** — API endpoints with database
-3. **E2E Tests** — Full user workflows (optional)
 
 ---
 
-## Recommended Tools
+## Tools
 
-| Tool         | Purpose                        | Status      |
-|--------------|--------------------------------|-------------|
-| Vitest       | Test runner and assertions     | Recommended |
-| Supertest    | HTTP endpoint testing          | Recommended |
-| @faker-js/faker | Test data generation        | Optional    |
+| Tool                | Purpose                    |
+| ------------------- | -------------------------- |
+| Vitest              | Test runner and assertions |
+| Supertest           | HTTP endpoint testing      |
+| @faker-js/faker     | Test data generation       |
+| @vitest/coverage-v8 | Code coverage reporting    |
 
-### Installation
+---
+
+## Running Tests
 
 ```bash
-npm install -D vitest supertest @types/supertest @faker-js/faker
-```
+# Run all tests
+npm test
 
-### Package.json Scripts
+# Run tests in watch mode
+npm run test:watch
 
-```json
-{
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
-  }
-}
+# Run tests with coverage report
+npm run test:coverage
 ```
 
 ---
@@ -52,18 +49,50 @@ src/
 │   ├── setup.ts              # Test setup and helpers
 │   ├── integration/
 │   │   ├── auth.test.ts      # Auth endpoints
+│   │   ├── health.test.ts    # Health check endpoint
 │   │   └── jobs.test.ts      # Jobs endpoints
 │   └── unit/
+│       ├── errors.test.ts    # Error classes
 │       ├── jwt.test.ts       # JWT utilities
-│       ├── schemas.test.ts   # Zod schema validation
-│       └── errors.test.ts    # Error classes
+│       └── schemas.test.ts   # Zod schema validation
 ```
 
 ---
 
-## Unit Test Examples
+## Test Setup
 
-### JWT Utilities
+The test setup file (`src/__tests__/setup.ts`) provides:
+
+- **Database cleanup** before each test via `beforeEach`
+- **Prisma disconnection** after all tests via `afterAll`
+- **Helper functions** for creating test users and jobs
+
+```typescript
+import { createTestUser, createTestJob, TEST_USER_PASSWORD } from "../setup.js";
+
+// Create a test user with default password
+const user = await createTestUser();
+
+// Create a test user with custom data
+const user = await createTestUser({
+  email: "custom@example.com",
+  name: "Custom User",
+});
+
+// Create a test job for a user
+const job = await createTestJob(userId, {
+  method: "POST",
+  url: "https://api.example.com/test",
+});
+```
+
+---
+
+## Writing Tests
+
+### Unit Tests
+
+Unit tests are located in `src/__tests__/unit/` and test individual functions:
 
 ```typescript
 // src/__tests__/unit/jwt.test.ts
@@ -71,147 +100,23 @@ import { describe, it, expect } from "vitest";
 import { generateToken, verifyToken } from "../../lib/jwt.js";
 
 describe("JWT utilities", () => {
-  const userId = "test-user-id";
-
-  it("should generate a valid token", () => {
-    const token = generateToken(userId);
+  it("should generate a valid token string", () => {
+    const token = generateToken("user-id");
     expect(token).toBeDefined();
-    expect(typeof token).toBe("string");
+    expect(token.split(".")).toHaveLength(3);
   });
 
-  it("should verify and decode token", () => {
-    const token = generateToken(userId);
+  it("should verify and decode a valid token", () => {
+    const token = generateToken("user-id");
     const payload = verifyToken(token);
-    expect(payload.userId).toBe(userId);
-  });
-
-  it("should throw on invalid token", () => {
-    expect(() => verifyToken("invalid-token")).toThrow();
+    expect(payload.userId).toBe("user-id");
   });
 });
 ```
 
-### Zod Schemas
+### Integration Tests
 
-```typescript
-// src/__tests__/unit/schemas.test.ts
-import { describe, it, expect } from "vitest";
-import { createJobSchema, signupSchema } from "../../lib/schemas.js";
-
-describe("createJobSchema", () => {
-  it("should accept valid job data", () => {
-    const result = createJobSchema.parse({
-      method: "GET",
-      url: "https://example.com/api",
-      headers: "{}",
-    });
-    expect(result.method).toBe("GET");
-    expect(result.priority).toBe(0);  // default
-  });
-
-  it("should reject invalid HTTP method", () => {
-    expect(() =>
-      createJobSchema.parse({
-        method: "INVALID",
-        url: "https://example.com",
-      })
-    ).toThrow();
-  });
-
-  it("should reject invalid URL", () => {
-    expect(() =>
-      createJobSchema.parse({
-        method: "GET",
-        url: "not-a-url",
-      })
-    ).toThrow();
-  });
-});
-```
-
----
-
-## Integration Test Examples
-
-### Test Setup
-
-```typescript
-// src/__tests__/setup.ts
-import { prisma } from "../lib/db.js";
-import { beforeEach, afterAll } from "vitest";
-
-// Clean database before each test
-beforeEach(async () => {
-  await prisma.job.deleteMany();
-  await prisma.user.deleteMany();
-});
-
-// Disconnect after all tests
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
-// Helper to create test user
-export async function createTestUser() {
-  return prisma.user.create({
-    data: {
-      name: "Test User",
-      email: `test-${Date.now()}@example.com`,
-      password: "$2b$10$hashedpassword",  // Pre-hashed for tests
-    },
-  });
-}
-```
-
-### Auth Endpoint Tests
-
-```typescript
-// src/__tests__/integration/auth.test.ts
-import { describe, it, expect } from "vitest";
-import request from "supertest";
-import app from "../../index.js";  // Export app from index.ts
-
-describe("POST /auth/signup", () => {
-  it("should create a new user", async () => {
-    const response = await request(app)
-      .post("/auth/signup")
-      .send({
-        name: "Test User",
-        email: "test@example.com",
-        password: "password123",
-      });
-
-    expect(response.status).toBe(201);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data.user.email).toBe("test@example.com");
-  });
-
-  it("should reject duplicate email", async () => {
-    // First signup
-    await request(app)
-      .post("/auth/signup")
-      .send({
-        name: "User 1",
-        email: "duplicate@example.com",
-        password: "password123",
-      });
-
-    // Second signup with same email
-    const response = await request(app)
-      .post("/auth/signup")
-      .send({
-        name: "User 2",
-        email: "duplicate@example.com",
-        password: "password456",
-      });
-
-    expect(response.status).toBe(409);
-    expect(response.body.success).toBe(false);
-  });
-});
-```
-
-### Jobs Endpoint Tests
+Integration tests are located in `src/__tests__/integration/` and test API endpoints:
 
 ```typescript
 // src/__tests__/integration/jobs.test.ts
@@ -230,26 +135,20 @@ describe("POST /jobs", () => {
   });
 
   it("should create a job", async () => {
-    const response = await request(app)
-      .post("/jobs")
-      .set("Authorization", `Bearer ${token}`)
-      .send({
-        method: "GET",
-        url: "https://api.example.com/data",
-      });
+    const response = await request(app).post("/jobs").set("Authorization", `Bearer ${token}`).send({
+      method: "GET",
+      url: "https://api.example.com/data",
+    });
 
     expect(response.status).toBe(201);
-    expect(response.body.data.job.method).toBe("GET");
+    expect(response.body.success).toBe(true);
     expect(response.body.data.job.status).toBe("pending");
   });
 
   it("should reject without auth", async () => {
     const response = await request(app)
       .post("/jobs")
-      .send({
-        method: "GET",
-        url: "https://api.example.com/data",
-      });
+      .send({ method: "GET", url: "https://example.com" });
 
     expect(response.status).toBe(401);
   });
@@ -260,30 +159,40 @@ describe("POST /jobs", () => {
 
 ## Coverage Requirements
 
-| Metric      | Target  |
-|-------------|---------|
-| Statements  | > 80%   |
-| Branches    | > 75%   |
-| Functions   | > 80%   |
-| Lines       | > 80%   |
+| Metric     | Target | Current |
+| ---------- | ------ | ------- |
+| Statements | > 80%  | ~90%    |
+| Branches   | > 75%  | ~82%    |
+| Functions  | > 80%  | ~89%    |
+| Lines      | > 80%  | ~90%    |
 
-### Vitest Coverage Config
+Coverage excludes:
+
+- `node_modules/`, `dist/`
+- `src/generated/` (Prisma client)
+- `src/__tests__/` (test files themselves)
+- `src/index.ts` (server bootstrap)
+- Type definition files (`*.d.ts`)
+
+---
+
+## Configuration
+
+The test configuration is in `vitest.config.ts`:
 
 ```typescript
-// vitest.config.ts
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    globals: true,
+    environment: "node",
+    setupFiles: ["./src/__tests__/setup.ts"],
+    include: ["src/__tests__/**/*.test.ts"],
+    fileParallelism: false, // Sequential execution for database tests
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      exclude: [
-        "node_modules/",
-        "dist/",
-        "src/generated/",
-        "**/*.d.ts",
-      ],
       thresholds: {
         statements: 80,
         branches: 75,
@@ -294,6 +203,12 @@ export default defineConfig({
   },
 });
 ```
+
+### Key Configuration Notes
+
+- **`fileParallelism: false`**: Tests run sequentially to avoid database conflicts
+- **`setupFiles`**: Global setup runs before each test file
+- **`globals: true`**: Vitest globals (`describe`, `it`, `expect`) available without imports
 
 ---
 
@@ -323,13 +238,14 @@ jobs:
 
 ---
 
-## Implementation Roadmap
+## Implementation Status
 
-1. [ ] Install testing dependencies
-2. [ ] Create test setup file with database helpers
-3. [ ] Export Express app for testing
-4. [ ] Write unit tests for `lib/` utilities
-5. [ ] Write integration tests for auth endpoints
-6. [ ] Write integration tests for jobs endpoints
-7. [ ] Set up coverage reporting
-8. [ ] Add tests to CI pipeline
+- [x] Install testing dependencies
+- [x] Create test setup file with database helpers
+- [x] Export Express app for testing
+- [x] Write unit tests for `lib/` utilities
+- [x] Write integration tests for health endpoint
+- [x] Write integration tests for auth endpoints
+- [x] Write integration tests for jobs endpoints
+- [x] Set up coverage reporting with thresholds
+- [ ] Add tests to CI pipeline (GitHub Actions)

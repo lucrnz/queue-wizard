@@ -15,3 +15,5 @@ dist/
 prisma/*.db
 prisma/*.db-journal
 
+# Coverage
+coverage/
