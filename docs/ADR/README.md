@@ -15,28 +15,33 @@ Each ADR should follow this template:
 # ADR-NNNN: Title
 
 ## Status
+
 Proposed | Accepted | Deprecated | Superseded by ADR-XXXX
 
 ## Date
+
 YYYY-MM-DD (use `date "+%Y-%m-%d"` if current date unknown)
 
 ## Context
+
 What is the issue that we're seeing that is motivating this decision or change?
 
 ## Decision
+
 What is the change that we're proposing and/or doing?
 
 ## Consequences
+
 What becomes easier or more difficult to do because of this change?
 ```
 
 ## Index
 
-| ADR | Title | Status | Date |
-|-----|-------|--------|------|
-| [0001](./0001-use-better-sqlite3-driver.md) | Use better-sqlite3 Driver for Prisma | Accepted | 2026-01-14 |
+| ADR                                         | Title                                  | Status   | Date       |
+| ------------------------------------------- | -------------------------------------- | -------- | ---------- |
+| [0001](./0001-use-better-sqlite3-driver.md) | Use better-sqlite3 Driver for Prisma   | Accepted | 2026-01-14 |
 | [0002](./0002-zod-validation-all-inputs.md) | Zod Validation for All External Inputs | Accepted | 2026-01-14 |
-| [0003](./0003-jwt-authentication.md) | JWT-based Authentication | Accepted | 2026-01-14 |
+| [0003](./0003-jwt-authentication.md)        | JWT-based Authentication               | Accepted | 2026-01-14 |
 
 ## Creating a New ADR
 

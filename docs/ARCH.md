@@ -22,6 +22,7 @@ job definitions. Each job stores complete HTTP request details (method, URL, hea
 can be processed by a separate worker system.
 
 **Key characteristics:**
+
 - RESTful API design
 - Stateless authentication via JWT
 - Single-tenant user isolation (users only see their own jobs)
@@ -166,34 +167,35 @@ can be processed by a separate worker system.
 
 ### User Model
 
-| Column    | Type     | Constraints              |
-|-----------|----------|--------------------------|
-| id        | String   | Primary key, UUID        |
-| name      | String   | Required                 |
-| email     | String   | Required, Unique         |
-| password  | String   | Required (hashed)        |
-| createdAt | DateTime | Auto-generated           |
-| updatedAt | DateTime | Auto-updated             |
+| Column    | Type     | Constraints       |
+| --------- | -------- | ----------------- |
+| id        | String   | Primary key, UUID |
+| name      | String   | Required          |
+| email     | String   | Required, Unique  |
+| password  | String   | Required (hashed) |
+| createdAt | DateTime | Auto-generated    |
+| updatedAt | DateTime | Auto-updated      |
 
 ### Job Model
 
-| Column       | Type     | Default     | Description                    |
-|--------------|----------|-------------|--------------------------------|
-| id           | String   | UUID        | Primary key                    |
-| priority     | Int      | 0           | Lower = higher priority        |
-| method       | String   | —           | HTTP method                    |
-| url          | String   | —           | Target URL                     |
-| headers      | String   | "{}"        | JSON string of headers         |
-| body         | String?  | null        | JSON string of request body    |
-| status       | String   | "pending"   | pending/processing/completed/failed |
-| attempts     | Int      | 0           | Processing attempt count       |
-| result       | String?  | null        | Success response data          |
-| errorMessage | String?  | null        | Failure error message          |
-| createdAt    | DateTime | now()       | Creation timestamp             |
-| updatedAt    | DateTime | auto        | Last update timestamp          |
-| userId       | String   | —           | Foreign key to User            |
+| Column       | Type     | Default   | Description                         |
+| ------------ | -------- | --------- | ----------------------------------- |
+| id           | String   | UUID      | Primary key                         |
+| priority     | Int      | 0         | Lower = higher priority             |
+| method       | String   | —         | HTTP method                         |
+| url          | String   | —         | Target URL                          |
+| headers      | String   | "{}"      | JSON string of headers              |
+| body         | String?  | null      | JSON string of request body         |
+| status       | String   | "pending" | pending/processing/completed/failed |
+| attempts     | Int      | 0         | Processing attempt count            |
+| result       | String?  | null      | Success response data               |
+| errorMessage | String?  | null      | Failure error message               |
+| createdAt    | DateTime | now()     | Creation timestamp                  |
+| updatedAt    | DateTime | auto      | Last update timestamp               |
+| userId       | String   | —         | Foreign key to User                 |
 
 **Indexes:**
+
 - `Job.userId` — Filter jobs by owner
 - `Job.status` — Filter jobs by status
 
@@ -236,13 +238,13 @@ See [ENDPOINTS.md](./ENDPOINTS.md) for complete endpoint reference.
 
 ### Error Classes
 
-| Class               | Status | Usage                           |
-|---------------------|--------|---------------------------------|
-| ValidationError     | 400    | Invalid input data              |
-| AuthenticationError | 401    | Missing/invalid credentials     |
-| NotFoundError       | 404    | Resource not found              |
-| ConflictError       | 409    | Duplicate resource (e.g., email)|
-| AppError            | varies | Base class for custom errors    |
+| Class               | Status | Usage                            |
+| ------------------- | ------ | -------------------------------- |
+| ValidationError     | 400    | Invalid input data               |
+| AuthenticationError | 401    | Missing/invalid credentials      |
+| NotFoundError       | 404    | Resource not found               |
+| ConflictError       | 409    | Duplicate resource (e.g., email) |
+| AppError            | varies | Base class for custom errors     |
 
 ### Error Handler Behavior
 
@@ -272,6 +274,6 @@ See [ENDPOINTS.md](./ENDPOINTS.md) for complete endpoint reference.
 ```typescript
 // Jobs are always filtered by authenticated user
 const jobs = await prisma.job.findMany({
-  where: { userId: req.userId }
+  where: { userId: req.userId },
 });
 ```

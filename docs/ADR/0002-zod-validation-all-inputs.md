@@ -12,12 +12,14 @@ Accepted
 
 The API accepts user input from HTTP requests (body, query params, path params). We need a
 robust validation strategy that:
+
 - Provides runtime type safety
 - Generates TypeScript types from validation schemas
 - Gives clear error messages to clients
 - Integrates well with Express middleware
 
 Options considered:
+
 1. **Manual validation** — Custom validation functions
 2. **Joi** — Popular schema validation library
 3. **Zod** — TypeScript-first schema validation
@@ -28,6 +30,7 @@ Options considered:
 Use Zod for all external input validation.
 
 **Implementation:**
+
 - All schemas defined in `src/lib/schemas.ts`
 - Schema names follow pattern: `<action><Entity>Schema` (e.g., `createJobSchema`)
 - Export inferred types alongside schemas (e.g., `type CreateJobInput`)
@@ -36,6 +39,7 @@ Use Zod for all external input validation.
 ## Consequences
 
 **Positive:**
+
 - Single source of truth for validation rules and TypeScript types
 - `z.infer<typeof schema>` eliminates type drift
 - Composable schemas for complex validation
@@ -43,11 +47,13 @@ Use Zod for all external input validation.
 - Excellent TypeScript integration
 
 **Negative:**
+
 - Additional dependency (~50KB)
 - Learning curve for advanced features (transforms, refinements)
 - Different API than other validation libraries team may know
 
 **Patterns established:**
+
 ```typescript
 // Schema definition
 export const createJobSchema = z.object({

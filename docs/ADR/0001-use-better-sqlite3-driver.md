@@ -15,6 +15,7 @@ deployments. The application needs to store user accounts and job queue data wit
 compliance.
 
 Options considered:
+
 1. **Prisma default SQLite** — Uses Prisma's built-in query engine
 2. **better-sqlite3 driver adapter** — Uses synchronous better-sqlite3 via Prisma adapter
 3. **PostgreSQL/MySQL** — Full client-server database
@@ -24,6 +25,7 @@ Options considered:
 Use SQLite with the `@prisma/adapter-better-sqlite3` driver adapter.
 
 **Rationale:**
+
 - Zero external dependencies for database server
 - Synchronous operations improve predictable performance for queue operations
 - Better-sqlite3 is significantly faster than Prisma's default SQLite engine
@@ -33,18 +35,21 @@ Use SQLite with the `@prisma/adapter-better-sqlite3` driver adapter.
 ## Consequences
 
 **Positive:**
+
 - Simple deployment (no database server to manage)
 - Fast read/write operations
 - Easy backup (copy single file)
 - No network latency for database operations
 
 **Negative:**
+
 - Not suitable for horizontal scaling (single-writer limitation)
 - Limited to single-server deployments
 - Database file must be on local filesystem
 
 **Migration path:**
 If scaling requirements change, migrate to PostgreSQL by:
+
 1. Updating `prisma/schema.prisma` datasource provider
 2. Replacing adapter in `src/lib/db.ts`
 3. Running `prisma migrate deploy`

@@ -7,6 +7,7 @@ Health check endpoint.
 - **Auth:** None
 
 **Response (200):**
+
 ```json
 { "success": true, "data": { "status": "healthy", "timestamp": "..." } }
 ```
@@ -27,6 +28,7 @@ Create a new user account.
 | `password` | string | Yes | Min 6 chars |
 
 **Response (201):**
+
 ```json
 { "success": true, "data": { "user": { "id", "name", "email", "createdAt" } } }
 ```
@@ -48,6 +50,7 @@ Authenticate and get JWT token.
 | `password` | string | Yes |
 
 **Response (200):**
+
 ```json
 { "success": true, "data": { "token": "...", "user": { "id", "name", "email" } } }
 ```
@@ -72,6 +75,7 @@ Create a new HTTP job.
 | `body` | string | No | `null` | Valid JSON string or null |
 
 **Response (201):**
+
 ```json
 { "success": true, "data": { "job": { "id", "priority", "method", "url", "headers", "body", "status", "attempts", "result", "errorMessage", "createdAt", "updatedAt", "userId" } } }
 ```
@@ -92,6 +96,7 @@ List authenticated user's jobs.
 | `status` | string | No | `pending`, `processing`, `completed`, `failed` |
 
 **Response (200):**
+
 ```json
 { "success": true, "data": { "jobs": [...], "count": 1 } }
 ```
@@ -114,6 +119,7 @@ Get a single job by ID.
 | `id` | string | Valid UUID |
 
 **Response (200):**
+
 ```json
 { "success": true, "data": { "job": { ... } } }
 ```

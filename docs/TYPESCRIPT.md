@@ -76,7 +76,7 @@ interface Config {
 // Or use const assertion
 export const config = {
   port: 3000,
-  secret: "xxx"
+  secret: "xxx",
 } as const;
 ```
 
@@ -124,7 +124,7 @@ router.post("/", async (req, res, next) => {
     const validated = createJobSchema.parse(req.body);
     // Use validated data...
   } catch (error) {
-    next(error);  // ZodError caught by error handler
+    next(error); // ZodError caught by error handler
   }
 });
 ```
@@ -177,12 +177,7 @@ export class NotFoundError extends AppError {
 import { Request, Response, NextFunction } from "express";
 import { ZodError, ZodIssue } from "zod";
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   // Type-safe error handling
   if (err instanceof ZodError) {
     res.status(400).json({
@@ -205,16 +200,16 @@ export function errorHandler(
 
 ## Naming Conventions
 
-| Element          | Convention        | Example                          |
-|------------------|-------------------|----------------------------------|
-| Files            | camelCase         | `errorHandler.ts`, `db.ts`       |
-| Interfaces       | PascalCase        | `JwtPayload`, `ErrorResponse`    |
-| Type aliases     | PascalCase        | `CreateJobInput`, `HttpMethod`   |
-| Classes          | PascalCase        | `AppError`, `NotFoundError`      |
-| Functions        | camelCase         | `generateToken`, `verifyToken`   |
-| Constants        | camelCase/UPPER   | `config`, `HTTP_METHODS`         |
-| Zod schemas      | camelCaseSchema   | `signupSchema`, `createJobSchema`|
-| Env variables    | SCREAMING_SNAKE   | `JWT_SECRET`, `DATABASE_URL`     |
+| Element       | Convention      | Example                           |
+| ------------- | --------------- | --------------------------------- |
+| Files         | camelCase       | `errorHandler.ts`, `db.ts`        |
+| Interfaces    | PascalCase      | `JwtPayload`, `ErrorResponse`     |
+| Type aliases  | PascalCase      | `CreateJobInput`, `HttpMethod`    |
+| Classes       | PascalCase      | `AppError`, `NotFoundError`       |
+| Functions     | camelCase       | `generateToken`, `verifyToken`    |
+| Constants     | camelCase/UPPER | `config`, `HTTP_METHODS`          |
+| Zod schemas   | camelCaseSchema | `signupSchema`, `createJobSchema` |
+| Env variables | SCREAMING_SNAKE | `JWT_SECRET`, `DATABASE_URL`      |
 
 ---
 
