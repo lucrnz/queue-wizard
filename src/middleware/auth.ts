@@ -2,11 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../lib/jwt.js";
 import { AuthenticationError } from "../lib/errors.js";
 
-export function authMiddleware(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): void {
+export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
 

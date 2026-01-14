@@ -21,29 +21,36 @@ export const createJobSchema = z.object({
   priority: z.number().int().default(0),
   method: httpMethodSchema,
   url: z.string().url("Invalid URL"),
-  headers: z.string().default("{}").refine(
-    (val) => {
-      try {
-        JSON.parse(val);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    { message: "Headers must be a valid JSON string" }
-  ),
-  body: z.string().nullable().default(null).refine(
-    (val) => {
-      if (val === null) return true;
-      try {
-        JSON.parse(val);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    { message: "Body must be a valid JSON string or null" }
-  ),
+  headers: z
+    .string()
+    .default("{}")
+    .refine(
+      (val) => {
+        try {
+          JSON.parse(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Headers must be a valid JSON string" }
+    ),
+  body: z
+    .string()
+    .nullable()
+    .default(null)
+    .refine(
+      (val) => {
+        if (val === null) return true;
+        try {
+          JSON.parse(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Body must be a valid JSON string or null" }
+    ),
 });
 
 export const jobQuerySchema = z.object({

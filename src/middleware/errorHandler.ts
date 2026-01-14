@@ -10,12 +10,7 @@ interface ErrorResponse {
   };
 }
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   const response: ErrorResponse = {
     success: false,
     error: {
