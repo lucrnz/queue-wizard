@@ -11,8 +11,10 @@ docs/ENDPOINTS.md   ← API endpoint reference
 docs/TYPESCRIPT.md  ← Strict TS guidelines
 docs/TESTING.md     ← Test strategy
 docs/LOGGING.md     ← Logging guide
-docs/ADR/           ← Decision records
+ docs/NODE_NATIVE_FETCH_USAGE.md ← Native fetch guidance
+ docs/ADR/           ← Decision records
 ```
+
 
 Update `docs/` for detailed changes. Create ADRs for significant decisions per `docs/ADR/README.md`.
 
@@ -71,6 +73,7 @@ Pre-commit hooks run automatically on `git commit`:
 - **TypeScript strict mode**, ESM (`"type": "module"`), `.js` imports
 - **Never use `any`** → use `unknown` + Zod
 - Explicit return types on exports
+- Always use native Node.js `fetch` (never `node-fetch` or other HTTP client libs)
 - **Conventional Commits** for all commit messages (e.g., `feat:`, `fix:`, `docs:`, `chore:`)
 - See [docs/TYPESCRIPT.md](./docs/TYPESCRIPT.md)
 
