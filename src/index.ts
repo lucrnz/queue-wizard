@@ -2,10 +2,12 @@ import express, { Request, Response } from "express";
 import { config } from "./lib/config.js";
 import { connectDatabase, disconnectDatabase } from "./lib/db.js";
 import { logger } from "./lib/logger.js";
+import { startWorker, stopWorker } from "./lib/worker.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import authRoutes from "./routes/auth.js";
 import jobsRoutes from "./routes/jobs.js";
+import queueRoutes from "./routes/queue.js";
 
 const app = express();
 
@@ -27,6 +29,7 @@ app.get("/health", (_req: Request, res: Response) => {
 // Routes
 app.use("/auth", authRoutes);
 app.use("/jobs", jobsRoutes);
+app.use("/queue", queueRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
@@ -44,6 +47,7 @@ app.use(errorHandler);
 // Start server
 async function startServer(): Promise<void> {
   await connectDatabase();
+  startWorker();
 
   app.listen(config.port, () => {
     logger.info({ port: config.port }, "server.start");
@@ -56,12 +60,14 @@ if (isMainModule) {
   // Graceful shutdown
   process.on("SIGINT", async () => {
     logger.info("server.shutdown");
+    stopWorker();
     await disconnectDatabase();
     process.exit(0);
   });
 
   process.on("SIGTERM", async () => {
     logger.info("server.shutdown");
+    stopWorker();
     await disconnectDatabase();
     process.exit(0);
   });

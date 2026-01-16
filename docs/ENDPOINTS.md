@@ -107,6 +107,32 @@ Jobs ordered by priority (asc), then createdAt (desc).
 
 ---
 
+## GET /queue/status
+
+Queue status overview.
+
+- **Auth:** JWT required
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "pendingCount": 0,
+    "processingCount": 0,
+    "completedToday": 0,
+    "failedCount": 0,
+    "currentWorkers": 0,
+    "maxConcurrent": 5
+  }
+}
+```
+
+**Errors:** `401` unauthorized
+
+---
+
 ## GET /jobs/:id
 
 Get a single job by ID.
