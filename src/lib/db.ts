@@ -2,6 +2,7 @@ import { PrismaClient } from "../generated/prisma/client.js";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import { logger } from "./logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,9 +15,9 @@ export const prisma = new PrismaClient({ adapter });
 export async function connectDatabase(): Promise<void> {
   try {
     await prisma.$connect();
-    console.log("Database connected successfully");
+    logger.info("db.connected");
   } catch (error) {
-    console.error("Failed to connect to database:", error);
+    logger.error({ error }, "db.connect_failed");
     process.exit(1);
   }
 }

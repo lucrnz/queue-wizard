@@ -61,6 +61,7 @@ can be processed by a separate worker system.
 │   ├── ARCH.md              # This file
 │   ├── TYPESCRIPT.md        # TypeScript guidelines
 │   ├── TESTING.md           # Testing strategy
+│   ├── LOGGING.md           # Logging guide
 │   └── ADR/                 # Architecture decisions
 ├── tsconfig.json            # TypeScript configuration
 ├── package.json             # Dependencies and scripts
@@ -83,9 +84,16 @@ can be processed by a separate worker system.
 ├─────────────────────────────────────────────────────────────────────┤
 │  Middleware Pipeline:                                                │
 │  ┌─────────────┐  ┌───────────────┐  ┌─────────────────────────┐    │
-│  │ express.json│→ │ Route Handler │→ │ errorHandler            │    │
-│  │ (body parse)│  │               │  │ (Zod/AppError/unknown)  │    │
+│  │ express.json│→ │requestLogger  │→ │ Route Handler           │    │
+│  │ (body parse)│  │               │  │                         │    │
 │  └─────────────┘  └───────────────┘  └─────────────────────────┘    │
+│                         │                     │                    │
+│                         └──────────────┬──────┘                    │
+│                                        ▼                           │
+│                          ┌─────────────────────────┐               │
+│                          │ errorHandler            │               │
+│                          │ (Zod/AppError/unknown)  │               │
+│                          └─────────────────────────┘               │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
           ┌─────────────────────────┼─────────────────────────┐

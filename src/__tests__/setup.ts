@@ -22,7 +22,14 @@ export async function createTestUser(overrides?: {
   name?: string;
   email?: string;
   password?: string;
-}) {
+}): Promise<{
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}> {
   const hashedPassword = await bcrypt.hash(overrides?.password ?? TEST_USER_PASSWORD, 10);
 
   return prisma.user.create({
@@ -30,6 +37,14 @@ export async function createTestUser(overrides?: {
       name: overrides?.name ?? "Test User",
       email: overrides?.email ?? `test-${Date.now()}@example.com`,
       password: hashedPassword,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      password: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 }
@@ -45,7 +60,18 @@ export async function createTestJob(
     priority?: number;
     status?: string;
   }
-) {
+): Promise<{
+  id: string;
+  method: string;
+  url: string;
+  headers: string;
+  body: string | null;
+  priority: number;
+  status: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}> {
   return prisma.job.create({
     data: {
       method: overrides?.method ?? "GET",
@@ -55,6 +81,18 @@ export async function createTestJob(
       priority: overrides?.priority ?? 0,
       status: overrides?.status ?? "pending",
       userId,
+    },
+    select: {
+      id: true,
+      method: true,
+      url: true,
+      headers: true,
+      body: true,
+      priority: true,
+      status: true,
+      userId: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 }

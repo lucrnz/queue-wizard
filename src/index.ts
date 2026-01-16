@@ -1,7 +1,9 @@
 import express, { Request, Response } from "express";
 import { config } from "./lib/config.js";
 import { connectDatabase, disconnectDatabase } from "./lib/db.js";
+import { logger } from "./lib/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { requestLogger } from "./middleware/requestLogger.js";
 import authRoutes from "./routes/auth.js";
 import jobsRoutes from "./routes/jobs.js";
 
@@ -9,6 +11,7 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(requestLogger);
 
 // Health check endpoint
 app.get("/health", (_req: Request, res: Response) => {
@@ -43,7 +46,7 @@ async function startServer(): Promise<void> {
   await connectDatabase();
 
   app.listen(config.port, () => {
-    console.log(`🧙 QueueWizard API running on port ${config.port}`);
+    logger.info({ port: config.port }, "server.start");
   });
 }
 
@@ -52,19 +55,19 @@ const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 if (isMainModule) {
   // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("\nShutting down gracefully...");
+    logger.info("server.shutdown");
     await disconnectDatabase();
     process.exit(0);
   });
 
   process.on("SIGTERM", async () => {
-    console.log("\nShutting down gracefully...");
+    logger.info("server.shutdown");
     await disconnectDatabase();
     process.exit(0);
   });
 
   startServer().catch((error) => {
-    console.error("Failed to start server:", error);
+    logger.error({ error }, "server.start_failed");
     process.exit(1);
   });
 }

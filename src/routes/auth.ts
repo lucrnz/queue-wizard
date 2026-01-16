@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/db.js";
 import { generateToken } from "../lib/jwt.js";
+import { createChildLogger } from "../lib/logger.js";
 import { signupSchema, signinSchema } from "../lib/schemas.js";
 import { AuthenticationError, ConflictError } from "../lib/errors.js";
 
@@ -40,6 +41,12 @@ router.post("/signup", async (req: Request, res: Response, next: NextFunction): 
       },
     });
 
+    createChildLogger({
+      requestId: req.requestId,
+      userId: user.id,
+      email: user.email,
+    }).info("user.signup");
+
     res.status(201).json({
       success: true,
       data: {
@@ -74,6 +81,12 @@ router.post("/signin", async (req: Request, res: Response, next: NextFunction): 
 
     // Generate token
     const token = generateToken(user.id);
+
+    createChildLogger({
+      requestId: req.requestId,
+      userId: user.id,
+      email: user.email,
+    }).info("user.signin");
 
     res.json({
       success: true,

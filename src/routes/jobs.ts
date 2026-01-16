@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/db.js";
+import { createChildLogger } from "../lib/logger.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { createJobSchema, jobQuerySchema, jobIdParamSchema } from "../lib/schemas.js";
 import { NotFoundError, AuthenticationError } from "../lib/errors.js";
@@ -28,6 +29,14 @@ router.post("/", async (req: Request, res: Response, next: NextFunction): Promis
         userId: req.userId,
       },
     });
+
+    createChildLogger({
+      requestId: req.requestId,
+      userId: req.userId,
+      jobId: job.id,
+      method: job.method,
+      url: job.url,
+    }).info("job.created");
 
     res.status(201).json({
       success: true,
@@ -62,6 +71,13 @@ router.get("/", async (req: Request, res: Response, next: NextFunction): Promise
       orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
     });
 
+    createChildLogger({
+      requestId: req.requestId,
+      userId: req.userId,
+      status: query.status ?? null,
+      count: jobs.length,
+    }).info("jobs.listed");
+
     res.json({
       success: true,
       data: {
@@ -95,6 +111,12 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction): Prom
     if (job.userId !== req.userId) {
       throw new NotFoundError("Job not found");
     }
+
+    createChildLogger({
+      requestId: req.requestId,
+      userId: req.userId,
+      jobId: job.id,
+    }).info("job.fetched");
 
     res.json({
       success: true,

@@ -9,6 +9,7 @@ A backend API for managing job queues built with Node.js, TypeScript, Express, P
 - Job queue management with custom HTTP request details
 - Request validation with Zod
 - SQLite database with Prisma ORM (better-sqlite3 driver)
+- Structured logging with Pino
 
 ## Tech Stack
 
@@ -47,6 +48,7 @@ Create a `.env` file:
 DATABASE_URL="file:./dev.db"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 PORT=3000
+LOG_LEVEL=info
 ```
 
 ### Running the Server

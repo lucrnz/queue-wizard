@@ -10,6 +10,7 @@ docs/ARCH.md        ← Architecture details
 docs/ENDPOINTS.md   ← API endpoint reference
 docs/TYPESCRIPT.md  ← Strict TS guidelines
 docs/TESTING.md     ← Test strategy
+docs/LOGGING.md     ← Logging guide
 docs/ADR/           ← Decision records
 ```
 
@@ -147,7 +148,7 @@ PORT=3000
 
 ## Extensibility
 
-**Env vars:** `PORT` (3000), `JWT_SECRET`, `DATABASE_URL` (file:./dev.db)
+**Env vars:** `PORT` (3000), `JWT_SECRET`, `DATABASE_URL` (file:./dev.db), `LOG_LEVEL`
 
 **Add route:**
 
