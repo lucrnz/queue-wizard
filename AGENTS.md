@@ -9,7 +9,7 @@ AGENTS.md           ← This file (overview)
 docs/ARCH.md        ← Architecture details
 docs/ENDPOINTS.md   ← API endpoint reference
 docs/TYPESCRIPT.md  ← Strict TS guidelines
-docs/TESTING.md     ← Test strategy
+docs/TESTING.md     ← Test strategy (unit/integration/e2e)
 docs/LOGGING.md     ← Logging guide
  docs/NODE_NATIVE_FETCH_USAGE.md ← Native fetch guidance
  docs/ADR/           ← Decision records
@@ -58,6 +58,7 @@ npm run format               # Format all files with Prettier
 npm run format:check         # Check if files are formatted
 npm test                     # Run tests
 npm run test:coverage        # Run tests with coverage
+npm run test:e2e             # Run end-to-end tests
 ```
 
 ### Pre-commit Hooks (Lefthook)

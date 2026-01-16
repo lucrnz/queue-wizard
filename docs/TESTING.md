@@ -12,17 +12,19 @@ QueueWizard implements a comprehensive testing strategy covering:
 
 1. **Unit Tests** — Individual functions and utilities
 2. **Integration Tests** — API endpoints with database
+3. **End-to-End (E2E) Tests** — Full server + real HTTP + ephemeral DB
 
 ---
 
 ## Tools
 
-| Tool                | Purpose                    |
-| ------------------- | -------------------------- |
-| Vitest              | Test runner and assertions |
-| Supertest           | HTTP endpoint testing      |
-| @faker-js/faker     | Test data generation       |
-| @vitest/coverage-v8 | Code coverage reporting    |
+| Tool                | Purpose                            |
+| ------------------- | ---------------------------------- |
+| Vitest              | Test runner and assertions         |
+| Supertest           | Integration endpoint testing       |
+| Native fetch        | E2E HTTP requests (Node.js runtime) |
+| @faker-js/faker     | Test data generation               |
+| @vitest/coverage-v8 | Code coverage reporting            |
 
 ---
 
@@ -37,6 +39,9 @@ npm run test:watch
 
 # Run tests with coverage report
 npm run test:coverage
+
+# Run end-to-end tests
+npm run test:e2e
 ```
 
 ---
@@ -47,6 +52,8 @@ npm run test:coverage
 src/
 ├── __tests__/
 │   ├── setup.ts              # Test setup and helpers
+│   ├── e2e/
+│   │   └── api.test.ts       # Full server E2E flow
 │   ├── integration/
 │   │   ├── auth.test.ts      # Auth endpoints
 │   │   ├── health.test.ts    # Health check endpoint
@@ -60,6 +67,8 @@ src/
 ---
 
 ## Test Setup
+
+### Unit & Integration Setup
 
 The test setup file (`src/__tests__/setup.ts`) provides:
 
@@ -85,6 +94,17 @@ const job = await createTestJob(userId, {
   url: "https://api.example.com/test",
 });
 ```
+
+### End-to-End Setup
+
+E2E tests boot a real HTTP server and use an ephemeral Prisma SQLite database.
+Each run:
+
+1. Creates a temp DB file and sets `DATABASE_URL`.
+2. Runs `prisma db push` against the temp DB.
+3. Starts the Express server on an ephemeral port.
+4. Executes the full API flow via native `fetch`.
+5. Closes the server and deletes the temp DB.
 
 ---
 
@@ -155,6 +175,22 @@ describe("POST /jobs", () => {
 });
 ```
 
+### End-to-End Tests
+
+End-to-end tests live in `src/__tests__/e2e/` and run against a real HTTP server
+with a temporary Prisma SQLite database. The flow spins up the app on an ephemeral
+port, pushes the Prisma schema to a fresh temp DB, runs the full API workflow, and
+removes the DB file once the suite completes.
+
+Run E2E tests with:
+
+```bash
+npm run test:e2e
+```
+
+The E2E tests use native `fetch` (Node.js built-in) to ensure we exercise the
+same runtime HTTP stack as production.
+
 ---
 
 ## Coverage Requirements
@@ -178,7 +214,7 @@ Coverage excludes:
 
 ## Configuration
 
-The test configuration is in `vitest.config.ts`:
+The test configuration is in `vitest.config.ts` (unit/integration) and `vitest.e2e.config.ts` (end-to-end):
 
 ```typescript
 import { defineConfig } from "vitest/config";

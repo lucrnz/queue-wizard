@@ -7,7 +7,22 @@ import { logger } from "./logger.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.join(__dirname, "../../prisma/dev.db");
+const defaultDbPath = path.join(__dirname, "../../prisma/dev.db");
+
+function resolveDatabasePath(databaseUrl: string): string {
+  const normalized = databaseUrl.startsWith("file:")
+    ? databaseUrl.slice("file:".length)
+    : databaseUrl;
+
+  if (path.isAbsolute(normalized)) {
+    return normalized;
+  }
+
+  return path.resolve(process.cwd(), normalized);
+}
+
+const databaseUrl = process.env["DATABASE_URL"];
+const dbPath = databaseUrl ? resolveDatabasePath(databaseUrl) : defaultDbPath;
 const adapter = new PrismaBetterSqlite3({ url: dbPath });
 
 export const prisma = new PrismaClient({ adapter });
