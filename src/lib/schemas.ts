@@ -15,7 +15,13 @@ export const signinSchema = z.object({
 // Job schemas
 export const httpMethodSchema = z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
-export const jobStatusSchema = z.enum(["pending", "processing", "completed", "failed"]);
+export const jobStatusSchema = z.enum([
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+  "cancelled",
+]);
 
 export const createJobSchema = z.object({
   priority: z.number().int().default(0),
@@ -61,10 +67,19 @@ export const jobIdParamSchema = z.object({
   id: z.string().uuid("Invalid job ID"),
 });
 
+// Batch schemas
+export const batchCreateJobsSchema = z.object({
+  jobs: z
+    .array(createJobSchema)
+    .min(1, "At least one job is required")
+    .max(100, "Maximum 100 jobs per batch"),
+});
+
 // Types
 export type SignupInput = z.infer<typeof signupSchema>;
 export type SigninInput = z.infer<typeof signinSchema>;
 export type CreateJobInput = z.infer<typeof createJobSchema>;
+export type BatchCreateJobsInput = z.infer<typeof batchCreateJobsSchema>;
 export type JobQueryInput = z.infer<typeof jobQuerySchema>;
 export type HttpMethod = z.infer<typeof httpMethodSchema>;
 export type JobStatus = z.infer<typeof jobStatusSchema>;
