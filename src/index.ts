@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import { config } from "./lib/config.js";
 import { connectDatabase, disconnectDatabase } from "./lib/db.js";
 import { logger } from "./lib/logger.js";
+import { startCleaner, stopCleaner } from "./lib/cleaner.js";
 import { startWorker, stopWorker } from "./lib/worker.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
@@ -49,6 +50,7 @@ app.use(errorHandler);
 async function startServer(): Promise<void> {
   await connectDatabase();
   startWorker();
+  startCleaner();
 
   app.listen(config.port, () => {
     logger.info({ port: config.port }, "server.start");
@@ -61,6 +63,7 @@ if (isMainModule) {
   // Graceful shutdown
   process.on("SIGINT", async () => {
     logger.info("server.shutdown");
+    stopCleaner();
     stopWorker();
     await disconnectDatabase();
     process.exit(0);
@@ -68,6 +71,7 @@ if (isMainModule) {
 
   process.on("SIGTERM", async () => {
     logger.info("server.shutdown");
+    stopCleaner();
     stopWorker();
     await disconnectDatabase();
     process.exit(0);
