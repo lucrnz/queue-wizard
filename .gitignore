@@ -17,3 +17,11 @@ prisma/*.db-journal
 
 # Coverage
 coverage/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Windows
+Thumbs.db
+*:Zone.Identifier
