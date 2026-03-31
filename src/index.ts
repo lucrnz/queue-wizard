@@ -1,3 +1,4 @@
+import cors from "cors";
 import express, { Request, Response } from "express";
 import { config } from "./lib/config.js";
 import { connectDatabase, disconnectDatabase } from "./lib/db.js";
@@ -11,7 +12,7 @@ import queueRoutes from "./routes/queue.js";
 
 const app = express();
 
-// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 
