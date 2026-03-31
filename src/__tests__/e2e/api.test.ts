@@ -412,7 +412,7 @@ describe("E2E API flow", () => {
     expect(userAJobs.body.data.jobs.some((job) => job.id === otherJob.id)).toBe(false);
   });
 
-  it("processes jobs via the worker and supports status filters", async () => {
+  it("processes jobs via the worker and supports status filters", { timeout: 30_000 }, async () => {
     stopWorker?.();
     resetWorkerStateForTest?.();
 

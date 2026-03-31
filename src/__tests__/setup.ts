@@ -59,6 +59,10 @@ export async function createTestJob(
     body?: string | null;
     priority?: number;
     status?: string;
+    attempts?: number;
+    retries?: number;
+    errorMessage?: string | null;
+    nextRunAt?: Date | null;
   }
 ): Promise<{
   id: string;
@@ -68,6 +72,11 @@ export async function createTestJob(
   body: string | null;
   priority: number;
   status: string;
+  attempts: number;
+  retries: number;
+  errorMessage: string | null;
+  result: string | null;
+  nextRunAt: Date | null;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -80,6 +89,10 @@ export async function createTestJob(
       body: overrides?.body ?? null,
       priority: overrides?.priority ?? 0,
       status: overrides?.status ?? "pending",
+      attempts: overrides?.attempts ?? 0,
+      retries: overrides?.retries ?? 0,
+      errorMessage: overrides?.errorMessage ?? null,
+      nextRunAt: overrides?.nextRunAt ?? null,
       userId,
     },
     select: {
@@ -90,6 +103,11 @@ export async function createTestJob(
       body: true,
       priority: true,
       status: true,
+      attempts: true,
+      retries: true,
+      errorMessage: true,
+      result: true,
+      nextRunAt: true,
       userId: true,
       createdAt: true,
       updatedAt: true,

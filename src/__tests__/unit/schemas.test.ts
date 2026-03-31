@@ -3,6 +3,7 @@ import {
   signupSchema,
   signinSchema,
   createJobSchema,
+  batchCreateJobsSchema,
   jobQuerySchema,
   jobIdParamSchema,
   httpMethodSchema,
@@ -183,10 +184,72 @@ describe("jobQuerySchema", () => {
     expect(jobQuerySchema.parse({ status: "processing" }).status).toBe("processing");
     expect(jobQuerySchema.parse({ status: "completed" }).status).toBe("completed");
     expect(jobQuerySchema.parse({ status: "failed" }).status).toBe("failed");
+    expect(jobQuerySchema.parse({ status: "cancelled" }).status).toBe("cancelled");
   });
 
   it("should reject invalid status", () => {
     expect(() => jobQuerySchema.parse({ status: "invalid" })).toThrow();
+  });
+});
+
+describe("batchCreateJobsSchema", () => {
+  it("should accept a valid batch of jobs", () => {
+    const result = batchCreateJobsSchema.parse({
+      jobs: [
+        { method: "GET", url: "https://example.com/a" },
+        { method: "POST", url: "https://example.com/b", body: '{"k":"v"}' },
+      ],
+    });
+    expect(result.jobs).toHaveLength(2);
+    expect(result.jobs[0].method).toBe("GET");
+    expect(result.jobs[1].body).toBe('{"k":"v"}');
+  });
+
+  it("should accept a single-item array", () => {
+    const result = batchCreateJobsSchema.parse({
+      jobs: [{ method: "GET", url: "https://example.com" }],
+    });
+    expect(result.jobs).toHaveLength(1);
+  });
+
+  it("should apply defaults on each item", () => {
+    const result = batchCreateJobsSchema.parse({
+      jobs: [{ method: "GET", url: "https://example.com" }],
+    });
+    expect(result.jobs[0].priority).toBe(0);
+    expect(result.jobs[0].headers).toBe("{}");
+    expect(result.jobs[0].body).toBeNull();
+  });
+
+  it("should reject an empty array", () => {
+    expect(() => batchCreateJobsSchema.parse({ jobs: [] })).toThrow();
+  });
+
+  it("should reject more than 100 items", () => {
+    const jobs = Array.from({ length: 101 }, () => ({
+      method: "GET",
+      url: "https://example.com",
+    }));
+    expect(() => batchCreateJobsSchema.parse({ jobs })).toThrow();
+  });
+
+  it("should reject when an item has an invalid URL", () => {
+    expect(() =>
+      batchCreateJobsSchema.parse({
+        jobs: [
+          { method: "GET", url: "https://example.com" },
+          { method: "GET", url: "bad" },
+        ],
+      })
+    ).toThrow();
+  });
+
+  it("should reject when jobs key is missing", () => {
+    expect(() => batchCreateJobsSchema.parse({})).toThrow();
+  });
+
+  it("should reject when jobs is not an array", () => {
+    expect(() => batchCreateJobsSchema.parse({ jobs: "not-array" })).toThrow();
   });
 });
 
