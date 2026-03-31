@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { calculateBackoffMs, nextRunDate } from "./backoff.js";
+import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createJobLogger, createWorkerLogger } from "./logger.js";
 import type { Job } from "../generated/prisma/client.js";
@@ -33,14 +35,22 @@ function parseBody(bodyJson: string | null): string | undefined {
 }
 
 async function claimNextJob(): Promise<Job | null> {
+  // Pass current time as a parameter so Prisma serialises it in the
+  // same ISO-8601 format used for stored DateTime values.  SQLite's
+  // datetime('now') produces 'YYYY-MM-DD HH:MM:SS' which would never
+  // compare correctly against Prisma's 'YYYY-MM-DDTHH:MM:SS.sssZ'.
+  const now = new Date();
+
   const jobs = await prisma.$queryRaw<Job[]>`
     UPDATE Job
     SET status = 'processing',
         attempts = attempts + 1,
+        nextRunAt = NULL,
         updatedAt = CURRENT_TIMESTAMP
     WHERE id = (
       SELECT id FROM Job
       WHERE status = 'pending'
+        AND (nextRunAt IS NULL OR nextRunAt <= ${now})
       ORDER BY priority ASC, createdAt ASC
       LIMIT 1
     )
@@ -53,8 +63,10 @@ async function claimNextJob(): Promise<Job | null> {
       body,
       status,
       attempts,
+      retries,
       result,
       errorMessage,
+      nextRunAt,
       createdAt,
       updatedAt,
       userId;
@@ -130,22 +142,31 @@ async function executeJob(job: Job): Promise<void> {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     const nextAttempts = job.attempts + 1;
+    const willRetry = nextAttempts < maxAttempts;
+    const backoffMs = willRetry ? calculateBackoffMs(job.attempts - 1, config.backoff) : 0;
+    const nextRun = willRetry ? nextRunDate(backoffMs) : null;
 
     await prisma.job.update({
       where: { id: job.id },
       data: {
-        status: nextAttempts < maxAttempts ? "pending" : "failed",
+        status: willRetry ? "pending" : "failed",
         errorMessage,
         result: null,
         attempts: {
           increment: 1,
         },
+        nextRunAt: nextRun,
       },
     });
 
     jobLogger.warn(
-      { durationMs: Date.now() - startedAt, attempts: nextAttempts, errorMessage },
-      "job.failed"
+      {
+        durationMs: Date.now() - startedAt,
+        attempts: nextAttempts,
+        errorMessage,
+        ...(willRetry && { nextRunAt: nextRun?.toISOString(), backoffMs }),
+      },
+      willRetry ? "job.retrying" : "job.failed"
     );
   } finally {
     currentWorkers = Math.max(0, currentWorkers - 1);
