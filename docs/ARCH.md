@@ -198,6 +198,7 @@ can be processed by a separate worker system.
 | attempts     | Int      | 0         | Processing attempt count            |
 | result       | String?  | null      | Success response data               |
 | errorMessage | String?  | null      | Failure error message               |
+| nextRunAt    | DateTime?| null      | Backoff: earliest time worker may claim the job |
 | createdAt    | DateTime | now()     | Creation timestamp                  |
 | updatedAt    | DateTime | auto      | Last update timestamp               |
 | userId       | String   | —         | Foreign key to User                 |
@@ -285,3 +286,76 @@ const jobs = await prisma.job.findMany({
   where: { userId: req.userId },
 });
 ```
+
+---
+
+## Worker & Exponential Backoff
+
+The worker polls for pending jobs and processes them concurrently (up to `maxConcurrent = 5`).
+
+### Retry Strategy
+
+When a job fails and has remaining attempts (`attempts < maxAttempts`), the worker does **not**
+retry immediately. Instead it computes an exponential-backoff delay and stores a `nextRunAt`
+timestamp on the job row. The worker's `claimNextJob` query filters out jobs whose `nextRunAt`
+is still in the future:
+
+```sql
+WHERE status = 'pending'
+  AND (nextRunAt IS NULL OR nextRunAt <= datetime('now'))
+```
+
+### Backoff Formula
+
+```
+delay = min(baseDelayMs * 2^attempt, maxDelayMs) + random(0, jitterMs)
+```
+
+| Parameter        | Env var            | Default  | Description                     |
+| ---------------- | ------------------ | -------- | ------------------------------- |
+| `baseDelayMs`    | `BACKOFF_BASE_MS`  | 1 000 ms | Initial delay after first fail  |
+| `maxDelayMs`     | `BACKOFF_MAX_MS`   | 30 000 ms| Upper bound on delay            |
+| `jitterMs`       | `BACKOFF_JITTER_MS`| 500 ms   | Random jitter added to delay    |
+
+### Example Progression (defaults, jitter = 0 for clarity)
+
+| Attempt | Formula              | Delay   |
+| ------- | -------------------- | ------- |
+| 0       | 1000 * 2^0 = 1 000  | 1 s     |
+| 1       | 1000 * 2^1 = 2 000  | 2 s     |
+| 2       | 1000 * 2^2 = 4 000  | 4 s     |
+| 3       | 1000 * 2^3 = 8 000  | 8 s     |
+| 4       | 1000 * 2^4 = 16 000 | 16 s    |
+| 5+      | clamped at 30 000    | 30 s    |
+
+### Manual Retry
+
+`POST /jobs/:id/retry` clears `nextRunAt` to `null`, resets `attempts` to 0, and sets
+`status` back to `pending`, making the job immediately eligible for the next poll cycle.
+
+---
+
+## Job Cleanup (TTL)
+
+A background cleaner task automatically deletes stale jobs so the database does not grow
+unbounded.
+
+### What gets deleted
+
+Jobs in **completed**, **failed**, or **cancelled** status whose `updatedAt` is older than
+the configured TTL.  Pending and processing jobs are never touched.
+
+### Configuration
+
+| Parameter     | Env var              | Default       | Description                              |
+| ------------- | -------------------- | ------------- | ---------------------------------------- |
+| `ttlDays`     | `JOB_TTL_DAYS`       | 30            | Retention period in days                 |
+| `intervalMs`  | `CLEANER_INTERVAL_MS`| 86 400 000 ms | How often the cleaner runs (default 24h) |
+
+### Lifecycle
+
+1. `startCleaner()` is called during app startup (alongside the worker).
+2. An **immediate** sweep runs on startup to catch anything accumulated while the
+   app was down.
+3. A `setInterval` fires every `intervalMs` for subsequent sweeps.
+4. `stopCleaner()` is called on `SIGINT` / `SIGTERM` for graceful shutdown.

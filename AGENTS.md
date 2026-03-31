@@ -33,7 +33,7 @@ Update `docs/` for detailed changes. Create ADRs for significant decisions per `
 
 | Path              | Purpose                              |
 | ----------------- | ------------------------------------ |
-| `src/lib/`        | Config, DB, errors, JWT, Zod schemas |
+| `src/lib/`        | Config, DB, errors, JWT, Zod schemas, backoff, cleaner |
 | `src/middleware/` | Auth, error handler                  |
 | `src/routes/`     | auth.ts, jobs.ts                     |
 | `src/generated/`  | Prisma client (**never edit**)       |
@@ -111,8 +111,11 @@ Pre-commit hooks run automatically on `git commit`:
 | `POST /auth/signup` | No   | Create account |
 | `POST /auth/signin` | No   | Get JWT        |
 | `POST /jobs`        | JWT  | Create job     |
+| `POST /jobs/batch`  | JWT  | Batch create   |
 | `GET /jobs`         | JWT  | List jobs      |
 | `GET /jobs/:id`     | JWT  | Get job        |
+| `DELETE /jobs/:id`  | JWT  | Cancel/delete  |
+| `POST /jobs/:id/retry` | JWT | Retry failed job |
 
 Details: [docs/ARCH.md](./docs/ARCH.md)
 
@@ -152,7 +155,9 @@ PORT=3000
 
 ## Extensibility
 
-**Env vars:** `PORT` (3000), `JWT_SECRET`, `DATABASE_URL` (file:./dev.db), `LOG_LEVEL`
+**Env vars:** `PORT` (3000), `JWT_SECRET`, `DATABASE_URL` (file:./dev.db), `LOG_LEVEL`,
+`BACKOFF_BASE_MS` (1000), `BACKOFF_MAX_MS` (30000), `BACKOFF_JITTER_MS` (500),
+`JOB_TTL_DAYS` (30), `CLEANER_INTERVAL_MS` (86400000)
 
 **Add route:**
 
